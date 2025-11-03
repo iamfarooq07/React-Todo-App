@@ -69,7 +69,7 @@ function App() {
 
         <div className="space-y-3">
           {(search ? searchText : todos).length === 0 ? (
-            <p className="text-center text-gray-500">No tasks found</p>
+            <p className="text-center text-gray-500"></p>
           ) : (
             (search ? searchText : todos).map((todo) => (
               <div
@@ -82,13 +82,13 @@ function App() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEdit(todo.id)}
-                    className="text-yellow-600 hover:text-yellow-700 font-semibold"
+                    className="bg-green-500 text-white p-1 rounded-lg font-semibold"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(todo.id)}
-                    className="text-red-600 hover:text-red-700 font-semibold"
+                    className="bg-red-500 text-white p-1 rounded-lg font-semibold"
                   >
                     Delete
                   </button>
