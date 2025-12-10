@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Todo from "./component/todo";
+import Todo from "./component/Todo";
 import { Route, Routes } from "react-router";
 import Login from "./component/Login";
 import Sign from "./component/Sign";
