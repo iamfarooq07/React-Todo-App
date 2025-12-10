@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/config";
+import { toast } from "react-toastify";
 
 function Sign() {
   const [email, setEmail] = useState("");
@@ -12,10 +13,14 @@ function Sign() {
 
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCred) => {
-        console.log("User created:", userCred.user);
+        toast.success("User Created", {
+          autoClose: 1000,
+        });
       })
       .catch((err) => {
-        console.log("Error:", err.message);
+        console.log("error", err.message);
+
+        toast.error(err.message);
       });
   }
 
@@ -68,7 +73,7 @@ function Sign() {
               </div>
 
               <button
-                className="border p-3 shadow-md bg-gray-400 rounded-lg w-full hover:bg-gray-500"
+                className="border p-3 shadow-md bg-gray-600 rounded-lg w-full hover:bg-gray-500"
                 type="submit"
               >
                 Sign Up

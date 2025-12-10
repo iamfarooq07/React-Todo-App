@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/config";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 function Login() {
   const navigate = useNavigate();
@@ -15,12 +16,16 @@ function Login() {
 
     signInWithEmailAndPassword(auth, email, password)
       .then((userCred) => {
-        console.log("Logged in:", userCred.user);
+        toast.success("Login Successfully", {
+          autoClose: 100,
+        });
 
         navigate("/todo");
       })
       .catch((err) => {
-        console.log("Error:", err.message);
+        toast.error(err.message, {
+          autoClose: 2000,
+        });
       });
   }
 
@@ -73,7 +78,7 @@ function Login() {
               </div>
 
               <button
-                className="border p-3 shadow-md bg-gray-400 rounded-lg w-full hover:bg-gray-500"
+                className="border p-3 shadow-md bg-gray-600 rounded-lg w-full hover:bg-gray-500"
                 type="submit"
               >
                 LOG IN

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getAuth, signOut } from "firebase/auth";
 import { db } from "../firebase/config";
 import { useNavigate } from "react-router";
 import {
@@ -9,6 +10,7 @@ import {
   doc,
   updateDoc,
 } from "firebase/firestore";
+import { toast } from "react-toastify";
 
 function Todo() {
   const [todos, setTodos] = useState([]);
@@ -55,6 +57,7 @@ function Todo() {
     }
 
     setNewTodo("");
+    setTodos("");
   };
 
   // ================================
@@ -78,14 +81,17 @@ function Todo() {
   // ================================
 
   const navigate = useNavigate();
+  const auth = getAuth();
   function logout() {
     signOut(auth)
       .then(() => {
-        console.log("User logged out");
+        toast.success("User logged out", {
+          autoClose: 100,
+        });
         navigate("/");
       })
-      .catch((err) => {
-        console.log("Logout error:", err.message);
+      .catch((error) => {
+        toast.error(error);
       });
   }
   return (
