@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getAuth, signOut } from "firebase/auth";
 import { db } from "../firebase/config";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import {
   addDoc,
   collection,
@@ -18,6 +18,9 @@ function Todo() {
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
 
+  const auth = getAuth();
+  const user = auth.currentUser;
+  const navigate = useNavigate();
   const todoRef = collection(db, "todo-list");
 
   // ================================
@@ -25,131 +28,148 @@ function Todo() {
   // ================================
   useEffect(() => {
     const unsub = onSnapshot(todoRef, (snapshot) => {
-      const list = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const list = snapshot.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        .sort((a, b) => b.createdAt - a.createdAt);
+
       setTodos(list);
     });
 
     return () => unsub();
-  }, []);
+  }, [todoRef]);
 
   // ================================
-  //      ADD OR UPDATE TODO
+  //      ADD / UPDATE TODO
   // ================================
   const handleAdd = async () => {
-    if (newTodo.trim() === "") return;
-
-    if (editId) {
-      // UPDATE FIREBASE
-      await updateDoc(doc(db, "todo-list", editId), {
-        text: newTodo,
-      });
-
-      setEditId(null);
-    } else {
-      // ADD TO FIREBASE
-      await addDoc(todoRef, {
-        text: newTodo,
-        createdAt: Date.now(),
-      });
+    if (!newTodo.trim()) {
+      toast.error("Todo cannot be empty");
+      return;
     }
 
-    setNewTodo("");
-    setTodos("");
+    try {
+      if (editId) {
+        await updateDoc(doc(db, "todo-list", editId), {
+          text: newTodo,
+        });
+        setEditId(null);
+      } else {
+        await addDoc(todoRef, {
+          text: newTodo,
+          createdAt: Date.now(),
+          userId: user?.uid,
+        });
+      }
+
+      setNewTodo("");
+    } catch {
+      toast.error("Something went wrong");
+    }
   };
 
   // ================================
-  //          DELETE TODO
+  //          DELETE
   // ================================
   const handleDelete = async (id) => {
     await deleteDoc(doc(db, "todo-list", id));
   };
 
   // ================================
-  //          EDIT TODO
+  //          EDIT
   // ================================
   const handleEdit = (id, text) => {
     setEditId(id);
     setNewTodo(text);
   };
 
-  const searchText = todos.filter((todo) =>
-    todo.text.toLowerCase().includes(search.toLowerCase())
-  );
   // ================================
+  //          SEARCH
+  // ================================
+  const filteredTodos = todos.filter((todo) =>
+    todo.text?.toLowerCase().includes(search.toLowerCase()),
+  );
 
-  const navigate = useNavigate();
-  const auth = getAuth();
-  function logout() {
-    signOut(auth)
-      .then(() => {
-        toast.success("User logged out", {
-          autoClose: 100,
-        });
-        navigate("/");
-      })
-      .catch((error) => {
-        toast.error(error);
-      });
-  }
+  // ================================
+  //          LOGOUT
+  // ================================
+  const logout = async () => {
+    await signOut(auth);
+    toast.success("Logged out", {
+      autoClose: 2000,
+    });
+    navigate("/");
+  };
+
   return (
-    <div className="min-h-screen bg-blue-200 flex justify-center items-center">
-      <div className="bg-white shadow-2xl rounded-2xl w-[90%] sm:w-[60%] md:w-[40%] p-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-4xl font-extrabold text-blue-700 mb-6">
-            React Todo App
-          </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-200 to-blue-300 flex justify-center items-center p-4">
+      <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl p-6">
+        {/* Header */}
+        <div className="flex justify-between items-center border-b pb-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-extrabold text-blue-700 ">Todo App</h1>
+            <p className="text-gray-600 mt-2">
+              Welcome,{" "}
+              <span className="font-semibold text-blue-600">
+                {user?.displayName || "User"}
+              </span>
+            </p>
+          </div>
+
           <button
             onClick={logout}
-            className="bg-blue-500 text-white px-4 py-2 rounded-2xl"
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
           >
             Logout
           </button>
         </div>
 
+        {/* Add Todo */}
         <div className="flex gap-2 mb-4">
           <input
             type="text"
-            placeholder="Write a task..."
+            placeholder="Write a new task..."
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
-            className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
           />
           <button
             onClick={handleAdd}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-lg"
           >
             {editId ? "Update" : "Add"}
           </button>
         </div>
 
+        {/* Search */}
         <input
           type="text"
-          placeholder="Search task..."
+          placeholder="Search todos..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded-lg mb-6 focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3 border rounded-lg mb-6"
         />
 
+        {/* Todo List */}
         <div className="space-y-3">
-          {(search ? searchText : todos).map((todo) => (
+          {(search ? filteredTodos : todos).map((todo) => (
             <div
               key={todo.id}
-              className="flex justify-between items-center bg-blue-50 border border-blue-200 p-3 rounded-lg"
+              className="flex justify-between items-center bg-blue-50 p-3 rounded-lg"
             >
-              <h3 className="text-lg font-medium text-gray-800">{todo.text}</h3>
+              <span className="text-lg">{todo.text}</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => handleEdit(todo.id, todo.text)}
-                  className="bg-green-500 text-white p-1 px-2 rounded-lg"
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(todo.id)}
-                  className="bg-red-500 text-white p-1 px-2 rounded-lg"
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
                 >
                   Delete
                 </button>
@@ -158,7 +178,9 @@ function Todo() {
           ))}
 
           {todos.length === 0 && (
-            <p className="text-center text-gray-500">No todos found</p>
+            <p className="text-center text-gray-500 py-6">
+              No todos yet. Add your first task ✨
+            </p>
           )}
         </div>
       </div>

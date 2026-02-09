@@ -27,6 +27,8 @@ function Login() {
           autoClose: 2000,
         });
       });
+    setEmail("");
+    setPassword("");
   }
 
   return (
@@ -89,7 +91,7 @@ function Login() {
               <p>
                 Don't have an account?{" "}
                 <Link
-                  to="/SignUp"
+                  to="/"
                   className="font-medium text-indigo-500 hover:text-indigo-400"
                 >
                   Sign up
