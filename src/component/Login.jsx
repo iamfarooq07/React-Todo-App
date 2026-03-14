@@ -4,103 +4,126 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/config";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { motion } from "framer-motion";
+import { FiMail, FiLock, FiEye, FiEyeOff, FiLogIn } from "react-icons/fi";
 
 function Login() {
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  function login(e) {
+  async function login(e) {
     e.preventDefault();
-
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCred) => {
-        toast.success("Login Successfully", {
-          autoClose: 100,
-        });
-
-        navigate("/todo");
-      })
-      .catch((err) => {
-        toast.error(err.message, {
-          autoClose: 2000,
-        });
-      });
-    setEmail("");
-    setPassword("");
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      toast.success("Welcome back!", { autoClose: 1500 });
+      navigate("/todo");
+    } catch (err) {
+      toast.error(err.message, { autoClose: 2000 });
+    } finally {
+      setLoading(false);
+      setEmail("");
+      setPassword("");
+    }
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen w-full bg-gray-800  p-4">
-      <div className="grid gap-8 w-full max-w-md">
-        <section className="rounded-3xl p-2">
-          <div className="rounded-3xl bg-black shadow-xl p-8">
-            <h1 className="text-5xl font-bold text-center dark:text-gray-300 text-gray-900 mb-6">
-              Log in
-            </h1>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-violet-900 via-purple-900 to-indigo-900 relative overflow-hidden">
+      {/* Background blobs */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" />
 
-            <form className="space-y-6" onSubmit={login}>
-              {/* Email */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block mb-2 text-lg dark:text-gray-300"
-                >
-                  Email
-                </label>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full max-w-md"
+      >
+        {/* Card */}
+        <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8">
+          {/* Logo / Title */}
+          <div className="text-center mb-8">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 shadow-lg mb-4"
+            >
+              <FiLogIn className="text-white text-2xl" />
+            </motion.div>
+            <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
+            <p className="text-white/60 mt-1 text-sm">Sign in to your account</p>
+          </div>
+
+          <form className="space-y-5" onSubmit={login}>
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-white/80 mb-2">Email</label>
+              <div className="relative">
+                <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-lg" />
                 <input
-                  id="email"
-                  className="border p-3 shadow-md bg-white rounded-lg w-full "
                   type="email"
-                  placeholder="Email"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
                 />
               </div>
+            </div>
 
-              {/* Password */}
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block mb-2 text-lg dark:text-gray-300"
-                >
-                  Password
-                </label>
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium text-white/80 mb-2">Password</label>
+              <div className="relative">
+                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-lg" />
                 <input
-                  id="password"
-                  className="border p-3 shadow-md bg-white rounded-lg w-full "
-                  type="password"
-                  placeholder="Password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-xl pl-10 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
                 />
-              </div>
-
-              <button
-                className="border p-3 shadow-md bg-gray-600 rounded-lg w-full hover:bg-gray-500"
-                type="submit"
-              >
-                LOG IN
-              </button>
-            </form>
-
-            <div className="flex flex-col mt-6 text-sm text-center dark:text-gray-300">
-              <p>
-                Don't have an account?{" "}
-                <Link
-                  to="/"
-                  className="font-medium text-indigo-500 hover:text-indigo-400"
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition"
                 >
-                  Sign up
-                </Link>
-              </p>
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
             </div>
-          </div>
-        </section>
-      </div>
+
+            {/* Submit */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 shadow-lg shadow-violet-500/30 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <FiLogIn /> Sign In
+                </>
+              )}
+            </motion.button>
+          </form>
+
+          <p className="text-center text-white/50 text-sm mt-6">
+            Don't have an account?{" "}
+            <Link to="/" className="text-violet-300 hover:text-violet-200 font-medium transition">
+              Sign up
+            </Link>
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 }
